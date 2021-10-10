@@ -80,14 +80,14 @@ def main(args):
 
                     label = "{}".format(labels[class_id])
 
-                    parent_dir = f"Data/Labelled/Raw/"
+                    parent_dir = f"Data/Labelled/Raw/Cropped/"
                     path = os.path.join(parent_dir, label)
 
                     if not os.path.exists(path):
                         os.mkdir(path)
 
                     now = time.time()
-                    cv2.imwrite(f"Data/Labelled/Raw/{label}/{now}.png", frame)
+                    cv2.imwrite(f"Data/Labelled/Raw/Cropped/{label}/{now}.png", frame)
 
             cv2.namedWindow('Frame', cv2.WINDOW_NORMAL)
 

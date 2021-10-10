@@ -1,45 +1,49 @@
-import numpy as np
+import time
+
 from imutils import paths
-from sklearn.cluster import DBSCAN
+from tensorflow.keras.applications.inception_v3 import InceptionV3
+from tensorflow.keras.applications.inception_v3 import preprocess_input
+from tensorflow.keras.preprocessing import image
+from tensorflow.keras.preprocessing.image import img_to_array
+from sklearn.cluster import KMeans
+import numpy as np
+from tqdm import tqdm
+import os
 
 
-def get_images():
-    imagePaths = list(paths.list_images("./Data/Un-Labelled/Un-Clustered/"))
-    data = []
-    # loop over the image paths
-    for (i, imagePath) in enumerate(imagePaths):
-        # load the input image and convert it from RGB (OpenCV ordering)
-        # to dlib ordering (RGB)
-        print("[INFO] processing image {}/{}".format(i + 1, len(imagePaths)))
-        print(imagePath)
-        with open(imagePath, "rb") as image:
-            # encodings = face_recognition.face_encodings(rgb, boxes)
-            d = [{"imagePath": imagePath, "image": image.read}]
-            data.extend(d)
-
-    return data
+# Function to Extract features from the images
+def image_feature(direc):
+    model = InceptionV3(weights='imagenet', include_top=False)
+    features = [];
+    img_name = [];
+    for i in tqdm(direc):
+        img = image.load_img(i, target_size=(224, 224))
+        x = img_to_array(img)
+        x = np.expand_dims(x, axis=0)
+        x = preprocess_input(x)
+        feat = model.predict(x)
+        feat = feat.flatten()
+        features.append(feat)
+        img_name.append(i)
+    return features, img_name
 
 
 def clustering():
-    data = get_images()
-    data = np.array(data)
-    encodings = [d["encoding"] for d in data]
-
+    imagePaths = list(paths.list_images("./Data/Un-Labelled/Un-Clustered/"))
+    features, image_name = image_feature(imagePaths)
     print("[INFO] clustering...")
-    clt = DBSCAN(metric="euclidean", n_jobs=-1, min_samples=5)
 
-    try:
-        breakpoint()
-        clt.fit(encodings)
+    # Creating Clusters
+    k = 2
+    clusters = KMeans(k, random_state=40)
+    clusters.fit(features)
 
-        # determine the total number of unique faces found in the dataset
-        # labelIDs = np.unique(clt.labels_)
-        # numUniqueObjects = len(np.where(labelIDs > -1)[0])
+    for label in clusters.labels_:
+        parent_dir = f"Data/Un-Labelled/Cropped/"
+        path = os.path.join(parent_dir, f"{now}/{label}")
 
-        # print("[INFO] # unique objects: {}".format(numUniqueObjects))
-    except Exception as e:
-        print(e)
-        print("[INFO] Clustering Cancelled due lack of images")
+        if os.path.exists(path):
+            os.mkdir(path)
 
 
 def cluster():
@@ -47,4 +51,6 @@ def cluster():
 
 
 if __name__ == "__main__":
-    cluster()
+    global now
+    now = time.time()
+    clustering()
