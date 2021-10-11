@@ -49,7 +49,7 @@ def main(args):
             if frame_no % 30 == 0 and frame_no > 0:
                 print(f"FPS. {frame_no / (time.time() - start)}")
                 now = time.time()
-                _ = edge.edge_detection(frame, now)
+                _ = edge.edge_detection(frame, frame, now)
                 if _:
                     cv2.imwrite(f"Data/Raw/{now}.png", frame)
 
@@ -58,9 +58,6 @@ def main(args):
 
             network.setInput(blob)
             detections = network.forward()
-
-            pos_dict = dict()
-            coordinates = dict()
 
             for i in range(detections.shape[2]):
 
@@ -78,16 +75,22 @@ def main(args):
                     cv2.putText(frame, f'{labels[class_id]} : {confidence * 100:.2f}', (startX, y),
                                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, bounding_box_color[class_id], 2)
 
+                    cropped = frame[startY:endY, startX:endX]
+
                     label = "{}".format(labels[class_id])
 
-                    parent_dir = f"Data/Labelled/Raw/Cropped/"
+                    parent_dir = f"Data/Labelled/Cropped/"
                     path = os.path.join(parent_dir, label)
 
                     if not os.path.exists(path):
                         os.mkdir(path)
 
                     now = time.time()
-                    cv2.imwrite(f"Data/Labelled/Raw/Cropped/{label}/{now}.png", frame)
+                    try:
+                        cv2.imwrite(f"Data/Labelled/Raw/{now}.png", frame)
+                        cv2.imwrite(f"Data/Labelled/Cropped/{label}/{now}.png", cropped)
+                    except:
+                        pass
 
             cv2.namedWindow('Frame', cv2.WINDOW_NORMAL)
 
@@ -131,5 +134,5 @@ def get_args():
 if __name__ == '__main__':
     arg = get_args()
     main(args=arg)
-
-    cluster.cluster()
+    now = time.time()
+    cluster.clustering(now)

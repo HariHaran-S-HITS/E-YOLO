@@ -27,19 +27,16 @@ def image_preproccessing(image, frame):
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
     _, thresh = cv2.threshold(gray, 120, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
-    cv2.imshow("thresh", cv2.resize(thresh, (frame.shape[1], frame.shape[0])))
 
     # noise removal
     kernel = np.ones((3, 3), np.uint8)
     opening = cv2.morphologyEx(thresh, cv2.MORPH_OPEN, kernel, iterations=7)
-    cv2.imshow("opening", cv2.resize(opening, (frame.shape[1], frame.shape[0])))
 
     return opening
 
 
-def edge_detection(frame, filename):
+def edge_detection(frame, inputframe, filename):
     args.height, args.width = frame.shape[1], frame.shape[0]
-    inputframe = frame.copy()
     inp = cv2.dnn.blobFromImage(cv2.resize(frame, (5000, 5000)),
                                 scalefactor=10.0,
                                 size=(500, 500),
@@ -74,21 +71,14 @@ def edge_detection(frame, filename):
         out = cv2.rectangle(out, (x, y), (x + w, y + h), (0, 255, 0), 2)
         frame = cv2.rectangle(frame, (x-120, y-120), (x - 80 + w, y - 80 + h), (0, 255, 0), 2)
 
-        cropped = inputframe[y - 120:y - 80 + h, x - 120:x - 80 + w]
         try:
-            if not filename == "":
-                # cv2.imshow(str(count), cropped)
-                cv2.imwrite(f"Data/Un-Labelled/Un-Clustered/{filename}-{count}.png", cropped)
-                _ = True
+            cropped = inputframe[y - 120:y - 80 + h, x - 120:x - 80 + w]
+            # breakpoint()
+            cv2.imwrite(f"Data/Un-Labelled/Cropped/Un-Clustered/{filename}-{count}.png", cropped)
+            _ = True
+            cv2.imwrite(f"Data/Un-Labelled/Raw/{filename}-{count}.png", frame)
         except:
             pass
-
-    frame = cv2.resize(frame, (args.height, args.width))
-
-    # out = cv2.resize(out, (frame.shape[1], frame.shape[0]))
-
-    # cv2.imshow(kWinName, frame)
-    # cv2.imshow("out", out)
 
     return _
 
@@ -101,7 +91,7 @@ if __name__ == "__main__":
         if not ret:
             break
 
-        _ = edge_detection(img, "")
+        _ = edge_detection(img, img, "")
 
         key = cv2.waitKey(1) & 0xFF
 
